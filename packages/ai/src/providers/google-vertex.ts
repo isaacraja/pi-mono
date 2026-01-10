@@ -28,6 +28,7 @@ import {
 	mapToolChoice,
 	retainThoughtSignature,
 } from "./google-shared.js";
+import { isVertexClaudeModel, streamVertexClaude } from "./google-vertex-claude.js";
 
 export interface GoogleVertexOptions extends StreamOptions {
 	toolChoice?: "auto" | "none" | "any";
@@ -59,6 +60,11 @@ export const streamGoogleVertex: StreamFunction<"google-vertex"> = (
 	options?: GoogleVertexOptions,
 ): AssistantMessageEventStream => {
 	const stream = new AssistantMessageEventStream();
+
+	if (isVertexClaudeModel(model)) {
+		void streamVertexClaude(model, context, options, stream);
+		return stream;
+	}
 
 	(async () => {
 		const output: AssistantMessage = {
