@@ -362,6 +362,38 @@ describe("AI Providers Empty Message Tests", () => {
 		});
 	});
 
+	describe("Google Vertex Claude Provider Empty Messages", () => {
+		const vertexProject = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT;
+		const vertexLocation = process.env.GOOGLE_CLOUD_LOCATION;
+		const isVertexConfigured = Boolean(vertexProject && vertexLocation);
+		const vertexOptions = { project: vertexProject, location: vertexLocation } as const;
+		const llm = getModel("google-vertex", "claude-3-5-haiku@20241022");
+
+		it.skipIf(!isVertexConfigured)("should handle empty content array", { retry: 3, timeout: 30000 }, async () => {
+			await testEmptyMessage(llm, vertexOptions);
+		});
+
+		it.skipIf(!isVertexConfigured)("should handle empty string content", { retry: 3, timeout: 30000 }, async () => {
+			await testEmptyStringMessage(llm, vertexOptions);
+		});
+
+		it.skipIf(!isVertexConfigured)(
+			"should handle whitespace-only content",
+			{ retry: 3, timeout: 30000 },
+			async () => {
+				await testWhitespaceOnlyMessage(llm, vertexOptions);
+			},
+		);
+
+		it.skipIf(!isVertexConfigured)(
+			"should handle empty assistant message in conversation",
+			{ retry: 3, timeout: 30000 },
+			async () => {
+				await testEmptyAssistantMessage(llm, vertexOptions);
+			},
+		);
+	});
+
 	// =========================================================================
 	// OAuth-based providers (credentials from ~/.pi/agent/oauth.json)
 	// =========================================================================

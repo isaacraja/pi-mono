@@ -18,7 +18,7 @@ import type { AssistantMessageEventStream } from "../utils/event-stream.js";
 import { parseStreamingJson } from "../utils/json-parse.js";
 import { sanitizeSurrogates } from "../utils/sanitize-unicode.js";
 import type { GoogleVertexOptions } from "./google-vertex.js";
-import { transformMessages } from "./transorm-messages.js";
+import { transformMessages } from "./transform-messages.js";
 
 const VERTEX_ANTHROPIC_VERSION = "vertex-2023-10-16";
 
@@ -638,7 +638,7 @@ function convertMessages(messages: Message[], model: Model<"google-vertex">): An
 					params.push({ role: "user", content: sanitizeSurrogates(msg.content) });
 				}
 			} else {
-				const blocks: AnthropicContentBlockParam[] = msg.content.map((item) => {
+				const blocks: AnthropicContentBlockParam[] = msg.content.map((item: TextContent | ImageContent) => {
 					if (item.type === "text") {
 						return { type: "text", text: sanitizeSurrogates(item.text) };
 					}

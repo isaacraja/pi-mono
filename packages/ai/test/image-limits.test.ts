@@ -914,6 +914,88 @@ describe("Image Limits E2E Tests", () => {
 		});
 	});
 
+	// -------------------------------------------------------------------------
+	// Google Vertex Claude (claude-3-5-haiku)
+	// Limits: Similar to Anthropic - 100 images, 5MB per image, 8000px max dimension
+	// -------------------------------------------------------------------------
+	describe("Google Vertex Claude (claude-3-5-haiku)", () => {
+		const vertexProject = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT;
+		const vertexLocation = process.env.GOOGLE_CLOUD_LOCATION;
+		const isVertexConfigured = Boolean(vertexProject && vertexLocation);
+		const vertexOptions = { project: vertexProject, location: vertexLocation } as const;
+		const model = getModel("google-vertex", "claude-3-5-haiku@20241022");
+
+		it.skipIf(!isVertexConfigured)("should accept a small number of images (5)", async () => {
+			const result = await testImageCount(model, 5, smallImage, vertexOptions);
+			expect(result.success, result.error).toBe(true);
+		});
+
+		it.skipIf(!isVertexConfigured)("should find maximum image count limit", { timeout: 600000 }, async () => {
+			// Anthropic limit: 100 images
+			const { limit, lastError } = await findLimit(
+				(count) => testImageCount(model, count, smallImage, vertexOptions),
+				20,
+				120,
+				20,
+			);
+			console.log(`\n  Vertex Claude max images: ~${limit} (last error: ${lastError})`);
+			expect(limit).toBeGreaterThanOrEqual(80);
+			expect(limit).toBeLessThanOrEqual(100);
+		});
+
+		it.skipIf(!isVertexConfigured)("should find maximum image size limit", { timeout: 600000 }, async () => {
+			const MB = 1024 * 1024;
+			// Anthropic limit: 5MB per image
+			const sizes = [1, 2, 3, 4, 5, 6];
+
+			let lastSuccess = 0;
+			let lastError: string | undefined;
+
+			for (const sizeMB of sizes) {
+				console.log(`  Testing size: ${sizeMB}MB...`);
+				const imageBase64 = generateImageWithSize(sizeMB * MB, `size-${sizeMB}mb.png`);
+				const result = await testImageSize(model, imageBase64, vertexOptions);
+				if (result.success) {
+					lastSuccess = sizeMB;
+					console.log(`    SUCCESS`);
+				} else {
+					lastError = result.error;
+					console.log(`    FAILED: ${result.error?.substring(0, 100)}`);
+					break;
+				}
+			}
+
+			console.log(`\n  Vertex Claude max image size: ~${lastSuccess}MB (last error: ${lastError})`);
+			expect(lastSuccess).toBeGreaterThanOrEqual(1);
+		});
+
+		it.skipIf(!isVertexConfigured)("should find maximum image dimension limit", { timeout: 600000 }, async () => {
+			// Anthropic limit: 8000px
+			const dimensions = [1000, 2000, 4000, 6000, 8000, 10000];
+
+			let lastSuccess = 0;
+			let lastError: string | undefined;
+
+			for (const dim of dimensions) {
+				console.log(`  Testing dimension: ${dim}x${dim}...`);
+				const imageBase64 = generateImage(dim, dim, `dim-${dim}.png`);
+				const result = await testImageDimensions(model, imageBase64, vertexOptions);
+				if (result.success) {
+					lastSuccess = dim;
+					console.log(`    SUCCESS`);
+				} else {
+					lastError = result.error;
+					console.log(`    FAILED: ${result.error?.substring(0, 100)}`);
+					break;
+				}
+			}
+
+			console.log(`\n  Vertex Claude max dimension: ~${lastSuccess}px (last error: ${lastError})`);
+			expect(lastSuccess).toBeGreaterThanOrEqual(6000);
+			expect(lastSuccess).toBeLessThanOrEqual(8000);
+		});
+	});
+
 	// =========================================================================
 	// MAX SIZE IMAGES TEST
 	// =========================================================================

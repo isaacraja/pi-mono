@@ -50,7 +50,7 @@ Unified LLM API with automatic model discovery, provider configuration, token an
 - **OpenAI Codex** (ChatGPT Plus/Pro subscription, requires OAuth, see below)
 - **Anthropic**
 - **Google**
-- **Vertex AI** (Gemini via Vertex AI)
+- **Vertex AI** (Gemini and Claude models via Vertex AI)
 - **Mistral**
 - **Groq**
 - **Cerebras**
@@ -902,7 +902,7 @@ For paid Cloud Code Assist subscriptions, set `GOOGLE_CLOUD_PROJECT` or `GOOGLE_
 
 ### Vertex AI (ADC)
 
-Vertex AI models use Application Default Credentials (ADC):
+Vertex AI supports both Gemini and Claude models using Application Default Credentials (ADC):
 
 - **Local development**: Run `gcloud auth application-default login`
 - **CI/Production**: Set `GOOGLE_APPLICATION_CREDENTIALS` to point to a service account JSON key file
@@ -925,8 +925,13 @@ export GOOGLE_APPLICATION_CREDENTIALS="/path/to/service-account.json"
 import { getModel, complete } from '@mariozechner/pi-ai';
 
 (async () => {
-  const model = getModel('google-vertex', 'gemini-2.5-flash');
-  const response = await complete(model, {
+  // Gemini models
+  const gemini = getModel('google-vertex', 'gemini-2.5-flash');
+  
+  // Claude models (requires Vertex AI Model Garden access)
+  const claude = getModel('google-vertex', 'claude-sonnet-4@20250514');
+  
+  const response = await complete(gemini, {
     messages: [{ role: 'user', content: 'Hello from Vertex AI' }]
   });
 
