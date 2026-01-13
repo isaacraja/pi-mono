@@ -413,6 +413,30 @@ describe("Generate E2E Tests", () => {
 		});
 	});
 
+	describe("Google Vertex Claude Provider (claude-3-5-haiku@20241022)", () => {
+		const vertexProject = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT;
+		const vertexLocation = process.env.GOOGLE_CLOUD_LOCATION;
+		const isVertexConfigured = Boolean(vertexProject && vertexLocation);
+		const vertexOptions = { project: vertexProject, location: vertexLocation } as const;
+		const llm = getModel("google-vertex", "claude-3-5-haiku@20241022");
+
+		it.skipIf(!isVertexConfigured)("should complete basic text generation", { retry: 3 }, async () => {
+			await basicTextGeneration(llm, vertexOptions);
+		});
+
+		it.skipIf(!isVertexConfigured)("should handle tool calling", { retry: 3 }, async () => {
+			await handleToolCall(llm, vertexOptions);
+		});
+
+		it.skipIf(!isVertexConfigured)("should handle streaming", { retry: 3 }, async () => {
+			await handleStreaming(llm, vertexOptions);
+		});
+
+		it.skipIf(!isVertexConfigured)("should handle image input", { retry: 3 }, async () => {
+			await handleImage(llm, vertexOptions);
+		});
+	});
+
 	describe.skipIf(!process.env.OPENAI_API_KEY)("OpenAI Completions Provider (gpt-4o-mini)", () => {
 		const { compat: _compat, ...baseModel } = getModel("openai", "gpt-4o-mini");
 		void _compat;

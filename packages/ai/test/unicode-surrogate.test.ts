@@ -669,6 +669,34 @@ describe("AI Providers Unicode Surrogate Pair Tests", () => {
 		});
 	});
 
+	describe("Google Vertex Claude Provider Unicode Handling", () => {
+		const vertexProject = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT;
+		const vertexLocation = process.env.GOOGLE_CLOUD_LOCATION;
+		const isVertexConfigured = Boolean(vertexProject && vertexLocation);
+		const vertexOptions = { project: vertexProject, location: vertexLocation } as const;
+		const llm = getModel("google-vertex", "claude-3-5-haiku@20241022");
+
+		it.skipIf(!isVertexConfigured)("should handle emoji in tool results", { retry: 3, timeout: 30000 }, async () => {
+			await testEmojiInToolResults(llm, vertexOptions);
+		});
+
+		it.skipIf(!isVertexConfigured)(
+			"should handle real-world LinkedIn comment data with emoji",
+			{ retry: 3, timeout: 30000 },
+			async () => {
+				await testRealWorldLinkedInData(llm, vertexOptions);
+			},
+		);
+
+		it.skipIf(!isVertexConfigured)(
+			"should handle unpaired high surrogate (0xD83D) in tool results",
+			{ retry: 3, timeout: 30000 },
+			async () => {
+				await testUnpairedHighSurrogate(llm, vertexOptions);
+			},
+		);
+	});
+
 	describe("OpenAI Codex Provider Unicode Handling", () => {
 		it.skipIf(!openaiCodexToken)(
 			"gpt-5.2-codex - should handle emoji in tool results",

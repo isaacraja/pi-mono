@@ -302,6 +302,52 @@ describe("Context overflow error handling", () => {
 	});
 
 	// =============================================================================
+	// Google Vertex Claude
+	// Expected pattern: "prompt is too long"
+	// =============================================================================
+
+	describe("Google Vertex Claude", () => {
+		const vertexProject = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT;
+		const vertexLocation = process.env.GOOGLE_CLOUD_LOCATION;
+		const isVertexConfigured = Boolean(vertexProject && vertexLocation);
+
+		it.skipIf(!isVertexConfigured)(
+			"claude-3-5-haiku - should detect overflow via isContextOverflow",
+			async () => {
+				const model = getModel("google-vertex", "claude-3-5-haiku@20241022");
+				const overflowContent = generateOverflowContent(model.contextWindow);
+
+				const context: Context = {
+					systemPrompt: "You are a helpful assistant.",
+					messages: [{ role: "user", content: overflowContent, timestamp: Date.now() }],
+				};
+
+				const response = await complete(model, context, {
+					project: vertexProject,
+					location: vertexLocation,
+				});
+
+				const result = {
+					provider: model.provider,
+					model: model.id,
+					contextWindow: model.contextWindow,
+					stopReason: response.stopReason,
+					errorMessage: response.errorMessage,
+					usage: response.usage,
+					hasUsageData: response.usage.input > 0 || response.usage.cacheRead > 0,
+					response,
+				};
+
+				logResult(result);
+
+				expect(result.stopReason).toBe("error");
+				expect(isContextOverflow(result.response, model.contextWindow)).toBe(true);
+			},
+			120000,
+		);
+	});
+
+	// =============================================================================
 	// xAI
 	// Expected pattern: "maximum prompt length is X but the request contains Y"
 	// =============================================================================

@@ -604,6 +604,34 @@ describe("totalTokens field", () => {
 	});
 
 	// =========================================================================
+	// Google Vertex Claude (ADC)
+	// =========================================================================
+
+	describe("Google Vertex Claude", () => {
+		const vertexProject = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT;
+		const vertexLocation = process.env.GOOGLE_CLOUD_LOCATION;
+		const isVertexConfigured = Boolean(vertexProject && vertexLocation);
+		const vertexOptions = { project: vertexProject, location: vertexLocation } as const;
+
+		it.skipIf(!isVertexConfigured)(
+			"claude-3-5-haiku - should return totalTokens equal to sum of components",
+			{ retry: 3, timeout: 60000 },
+			async () => {
+				const llm = getModel("google-vertex", "claude-3-5-haiku@20241022");
+
+				console.log(`\nGoogle Vertex Claude / ${llm.id}:`);
+				const { first, second } = await testTotalTokensWithCache(llm, vertexOptions);
+
+				logUsage("First request", first);
+				logUsage("Second request", second);
+
+				assertTotalTokensEqualsComponents(first);
+				assertTotalTokensEqualsComponents(second);
+			},
+		);
+	});
+
+	// =========================================================================
 	// OpenAI Codex (OAuth)
 	// =========================================================================
 

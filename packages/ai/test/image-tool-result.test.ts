@@ -303,6 +303,30 @@ describe("Tool Results with Images", () => {
 		});
 	});
 
+	describe("Google Vertex Claude Provider (claude-3-5-haiku)", () => {
+		const vertexProject = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT;
+		const vertexLocation = process.env.GOOGLE_CLOUD_LOCATION;
+		const isVertexConfigured = Boolean(vertexProject && vertexLocation);
+		const vertexOptions = { project: vertexProject, location: vertexLocation } as const;
+		const llm = getModel("google-vertex", "claude-3-5-haiku@20241022");
+
+		it.skipIf(!isVertexConfigured)(
+			"should handle tool result with only image",
+			{ retry: 3, timeout: 30000 },
+			async () => {
+				await handleToolWithImageResult(llm, vertexOptions);
+			},
+		);
+
+		it.skipIf(!isVertexConfigured)(
+			"should handle tool result with text and image",
+			{ retry: 3, timeout: 30000 },
+			async () => {
+				await handleToolWithTextAndImageResult(llm, vertexOptions);
+			},
+		);
+	});
+
 	// =========================================================================
 	// OAuth-based providers (credentials from ~/.pi/agent/oauth.json)
 	// =========================================================================

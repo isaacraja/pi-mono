@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Vertex AI support for Claude models (Claude 3.5, 3.7, 4, 4.5 families) via the `google-vertex` provider
+
 ## [0.49.2] - 2026-01-19
 
 ### Added

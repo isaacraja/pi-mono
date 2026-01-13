@@ -227,4 +227,24 @@ describe("AI Providers Abort Tests", () => {
 			await testAbortThenNewMessage(llm);
 		});
 	});
+
+	describe("Google Vertex Claude Provider Abort", () => {
+		const vertexProject = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT;
+		const vertexLocation = process.env.GOOGLE_CLOUD_LOCATION;
+		const isVertexConfigured = Boolean(vertexProject && vertexLocation);
+		const vertexOptions = { project: vertexProject, location: vertexLocation } as const;
+		const llm = getModel("google-vertex", "claude-3-5-haiku@20241022");
+
+		it.skipIf(!isVertexConfigured)("should abort mid-stream", { retry: 3 }, async () => {
+			await testAbortSignal(llm, vertexOptions);
+		});
+
+		it.skipIf(!isVertexConfigured)("should handle immediate abort", { retry: 3 }, async () => {
+			await testImmediateAbort(llm, vertexOptions);
+		});
+
+		it.skipIf(!isVertexConfigured)("should handle abort then new message", { retry: 3 }, async () => {
+			await testAbortThenNewMessage(llm, vertexOptions);
+		});
+	});
 });
